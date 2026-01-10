@@ -43,5 +43,8 @@
     <position joint="y" kp="500"/>
     <position joint="z" kp="500"/>
   </actuator>
-
+  <sensor>
+    <framepos objtype="body" objname="connector" name="connector_pos"/>
+    <framepos objtype="body" objname="gripper" name="gripper_pos"/>
+  </sensor>
 </mujoco>

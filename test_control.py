@@ -19,11 +19,11 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
         viewer.sync()
         
         if step % 500 == 0:
-            connector_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "connector")
-            connector_pos = data.xpos[connector_id]
-            print(f"connector pos: {connector_pos[0]:.3f}, {connector_pos[1]:.3f}, {connector_pos[2]:.3f}")
-            print(f"socket is at:  0.150, 0.000, 0.050")
-            print()
+            # sensordata is flat: [connector x,y,z, gripper x,y,z]
+            conn = data.sensordata[0:3]
+            grip = data.sensordata[3:6]
+            dist = np.linalg.norm(conn - np.array([0.15, 0, 0.05]))
+            print(f"connector: {conn.round(3)}, gripper: {grip.round(3)}, dist to socket: {dist:.3f}m")
+        
         step += 1
         time.sleep(0.002)
-
