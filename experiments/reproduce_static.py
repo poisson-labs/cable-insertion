@@ -1,8 +1,11 @@
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 
 import numpy as np
-import mujoco
-from cable_env import CableInsertionEnv
-import time
+from envs.cable_env import CableInsertionEnv
 
 env = CableInsertionEnv()
 obs, _ = env.reset()

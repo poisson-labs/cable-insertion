@@ -15,19 +15,19 @@
       <body name="seg1" pos="0 0 -0.03">
         <joint type="ball" damping="0.2" stiffness="0.1"/>
         <geom type="capsule" size="0.008" fromto="0 0 0 0 0 -0.03" rgba="0.9 0.4 0.1 1"/>
-        
+
         <body name="seg2" pos="0 0 -0.03">
           <joint type="ball" damping="0.2" stiffness="0.1"/>
           <geom type="capsule" size="0.008" fromto="0 0 0 0 0 -0.03" rgba="0.9 0.4 0.1 1"/>
-          
+
           <body name="seg3" pos="0 0 -0.03">
             <joint type="ball" damping="0.2" stiffness="0.1"/>
             <geom type="capsule" size="0.008" fromto="0 0 0 0 0 -0.03" rgba="0.9 0.4 0.1 1"/>
-            
+
             <body name="seg4" pos="0 0 -0.03">
               <joint type="ball" damping="0.2" stiffness="0.1"/>
               <geom type="capsule" size="0.008" fromto="0 0 0 0 0 -0.03" rgba="0.9 0.4 0.1 1"/>
-              
+
               <body name="connector" pos="0 0 -0.03">
                 <joint type="ball" damping="0.2" stiffness="0.1"/>
                 <geom type="cylinder" size="0.015 0.02" rgba="0.3 0.3 0.8 1"/>

@@ -1,4 +1,14 @@
+.venv/
 venv/
 __pycache__/
 *.pyc
 .DS_Store
+
+# Training outputs
+models/
+logs/
+MUJOCO_LOG.TXT
+
+# Old root-level artifacts (pre-restructure)
+cable_ppo.zip
+cable_ppo_vecnormalize.pkl

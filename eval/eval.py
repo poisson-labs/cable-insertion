@@ -1,10 +1,16 @@
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
 import numpy as np
 import mujoco.viewer
 from stable_baselines3 import PPO
-from cable_env import CableInsertionEnv
+from envs.cable_env import CableInsertionEnv
 
 env = CableInsertionEnv(randomize=True)  # Match training config
-model = PPO.load("cable_ppo")
+model = PPO.load(str(ROOT / "models" / "cable_ppo"))
 
 obs, _ = env.reset()
 successes = 0

@@ -2,10 +2,13 @@ import numpy as np
 import mujoco
 import gymnasium as gym
 from gymnasium import spaces
+from pathlib import Path
+
+SCENE_XML = str(Path(__file__).parent / "assets" / "cable_scene.xml")
 
 class CableInsertionEnv(gym.Env):
     def __init__(self, max_steps=200, randomize=True):
-        self.model = mujoco.MjModel.from_xml_path("cable_scene.xml")
+        self.model = mujoco.MjModel.from_xml_path(SCENE_XML)
         self.data = mujoco.MjData(self.model)
 
         # Base positions (from XML)
