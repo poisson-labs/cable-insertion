@@ -9,6 +9,13 @@ models/
 logs/
 MUJOCO_LOG.TXT
 
+# Rendered frames and videos
+experiments/frames/
+experiments/*.mp4
+
+# Downloaded robot models (MuJoCo Menagerie)
+third_party/
+
 # Old root-level artifacts (pre-restructure)
 cable_ppo.zip
 cable_ppo_vecnormalize.pkl
