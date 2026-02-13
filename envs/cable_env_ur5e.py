@@ -41,7 +41,7 @@ MAX_JOINT_VEL = np.array([1.0, 1.0, 1.0, 1.5, 1.5, 1.5], dtype=np.float32)
 # Cable parameters
 N_CABLE_SEGMENTS = 5
 CABLE_SEG_LENGTH = 0.025  # 2.5cm per segment
-CABLE_RADIUS = 0.006
+CABLE_RADIUS = 0.014
 CABLE_DAMPING = 0.15
 CABLE_STIFFNESS = 0.08
 
@@ -129,6 +129,10 @@ class CableInsertionUR5eEnv(gym.Env):
         # Physics options
         arm.option.timestep = PHYSICS_DT
 
+        # Offscreen framebuffer for 720p rendering
+        arm.visual.global_.offwidth = 1920
+        arm.visual.global_.offheight = 1080
+
         self._add_workspace(arm)
         self._add_cameras(arm)
         self._add_cable(arm)
@@ -152,17 +156,76 @@ class CableInsertionUR5eEnv(gym.Env):
         l2.pos = [0.5, 0.5, 1.5]
         l2.dir = [-0.3, -0.3, -1]
 
-        # Socket marker (visual only — no collision)
+        # Server tray / circuit board (visual context)
+        tray = spec.worldbody.add_body()
+        tray.name = "server_tray"
+        tray.pos = [-0.1, 0.45, 0.003]
+
+        # PCB base — dark green fibreglass
+        pcb = tray.add_geom()
+        pcb.name = "pcb_board"
+        pcb.type = mujoco.mjtGeom.mjGEOM_BOX
+        pcb.size = [0.12, 0.08, 0.003]
+        pcb.rgba = [0.05, 0.28, 0.08, 1]
+        pcb.contype = 0
+        pcb.conaffinity = 0
+
+        # Copper traces strip
+        trace1 = tray.add_geom()
+        trace1.type = mujoco.mjtGeom.mjGEOM_BOX
+        trace1.size = [0.10, 0.002, 0.0035]
+        trace1.pos = [0, -0.03, 0]
+        trace1.rgba = [0.7, 0.55, 0.15, 1]
+        trace1.contype = 0
+        trace1.conaffinity = 0
+
+        trace2 = tray.add_geom()
+        trace2.type = mujoco.mjtGeom.mjGEOM_BOX
+        trace2.size = [0.10, 0.002, 0.0035]
+        trace2.pos = [0, 0.03, 0]
+        trace2.rgba = [0.7, 0.55, 0.15, 1]
+        trace2.contype = 0
+        trace2.conaffinity = 0
+
+        # IC chip
+        chip = tray.add_geom()
+        chip.type = mujoco.mjtGeom.mjGEOM_BOX
+        chip.size = [0.015, 0.015, 0.005]
+        chip.pos = [-0.05, 0, 0]
+        chip.rgba = [0.12, 0.12, 0.12, 1]
+        chip.contype = 0
+        chip.conaffinity = 0
+
+        # Second IC chip
+        chip2 = tray.add_geom()
+        chip2.type = mujoco.mjtGeom.mjGEOM_BOX
+        chip2.size = [0.01, 0.02, 0.004]
+        chip2.pos = [0.04, -0.02, 0]
+        chip2.rgba = [0.12, 0.12, 0.12, 1]
+        chip2.contype = 0
+        chip2.conaffinity = 0
+
+        # Socket / port (the insertion target — sits on the PCB)
         socket = spec.worldbody.add_body()
         socket.name = "socket"
-        socket.pos = [-0.1, 0.45, 0.02]  # near where cable hangs in home pose
+        socket.pos = [-0.1, 0.45, 0.01]  # on top of the PCB
         sg = socket.add_geom()
         sg.name = "socket_geom"
-        sg.type = mujoco.mjtGeom.mjGEOM_CYLINDER
-        sg.size = [0.02, 0.015, 0]
-        sg.rgba = [0.2, 0.6, 0.2, 1]
+        sg.type = mujoco.mjtGeom.mjGEOM_BOX
+        sg.size = [0.022, 0.016, 0.01]  # wide rectangular port
+        sg.rgba = [0.15, 0.75, 0.15, 1]  # bright green
         sg.contype = 0
         sg.conaffinity = 0
+
+        # Socket opening (dark inset to suggest a port hole)
+        hole = socket.add_geom()
+        hole.name = "socket_hole"
+        hole.type = mujoco.mjtGeom.mjGEOM_BOX
+        hole.size = [0.016, 0.010, 0.011]
+        hole.pos = [0, 0, 0.001]
+        hole.rgba = [0.02, 0.02, 0.02, 1]
+        hole.contype = 0
+        hole.conaffinity = 0
 
     def _add_cameras(self, spec):
         """Overhead, side, and 3 wrist cameras."""
@@ -181,21 +244,37 @@ class CableInsertionUR5eEnv(gym.Env):
         sc.quat = [0.707, 0.5, 0.5, 0]
         sc.fovy = 70
 
-        # Wrist cameras on wrist_3_link
-        # Tool axis is +Y in wrist_3_link frame.
-        # Camera default looks along -Z. Rotate 90° around X to look along +Y.
-        # quat [w,x,y,z] = [cos(45°), sin(45°), 0, 0]
-        wrist = spec.body("wrist_3_link")
-        tool_quat = [0.7071, 0.7071, 0, 0]
+        # Third-person hero shot (3/4 elevated view of full workspace)
+        # From (0.8, -0.5, 0.8) looking toward workspace center (0, 0.3, 0.3)
+        tp = spec.worldbody.add_camera()
+        tp.name = "third_person"
+        tp.pos = [0.8, -0.5, 0.8]
+        tp.quat = [0.774, 0.504, 0.209, 0.321]
+        tp.fovy = 55
 
-        for name, x_off in [("wrist_center", 0.0),
-                            ("wrist_left", -0.04),
-                            ("wrist_right", 0.04)]:
-            cam = wrist.add_camera()
-            cam.name = name
-            cam.pos = [x_off, 0.13, 0]  # past attachment site, along tool axis
-            cam.quat = tool_quat
-            cam.fovy = 60
+        # Center camera: body-mounted, looks straight down the cable axis
+        grip_body = spec.body("gripper-base")
+        cam_c = grip_body.add_camera()
+        cam_c.name = "wrist_center"
+        cam_c.pos = [0, 0.02, 0.10]
+        cam_c.quat = [0, 0, 1, 0]       # 180° around Y → look along +Z
+        cam_c.fovy = 90
+
+        # Left & right cameras: fixed on worldbody, aimed at socket area.
+        # Gives the policy stable, triangulated side views of the
+        # connector-to-socket gap regardless of arm pose.
+        # Socket at ~[-0.1, 0.45, 0.01]; cameras target [-0.1, 0.45, 0.05]
+        cam_l = spec.worldbody.add_camera()
+        cam_l.name = "wrist_left"
+        cam_l.pos = [-0.40, 0.30, 0.20]
+        cam_l.quat = [0.7138, 0.4627, -0.2860, -0.4412]
+        cam_l.fovy = 50
+
+        cam_r = spec.worldbody.add_camera()
+        cam_r.name = "wrist_right"
+        cam_r.pos = [0.20, 0.30, 0.20]
+        cam_r.quat = [0.7138, 0.4627, 0.2860, 0.4412]
+        cam_r.fovy = 50
 
     def _add_cable(self, spec):
         """Flexible ball-joint cable chain attached to gripper fingertip."""
@@ -217,7 +296,7 @@ class CableInsertionUR5eEnv(gym.Env):
             g.type = mujoco.mjtGeom.mjGEOM_CAPSULE
             g.size = [CABLE_RADIUS, 0, 0]
             g.fromto = [0, 0, 0, 0, 0, CABLE_SEG_LENGTH]
-            g.rgba = [0.9, 0.4, 0.1, 1]
+            g.rgba = [1.0, 0.85, 0.0, 1]  # bright yellow — visible against dark floor
 
             prev = seg
 
@@ -232,8 +311,8 @@ class CableInsertionUR5eEnv(gym.Env):
         cg = conn.add_geom()
         cg.name = "connector_geom"
         cg.type = mujoco.mjtGeom.mjGEOM_CYLINDER
-        cg.size = [0.012, 0.018, 0]
-        cg.rgba = [0.3, 0.3, 0.8, 1]
+        cg.size = [0.018, 0.022, 0]  # chunky RJ45-style plug
+        cg.rgba = [0.2, 0.4, 0.95, 1]  # bright blue
 
     def _add_sensors(self, spec):
         """Connector position + wrist force/torque sensors."""
