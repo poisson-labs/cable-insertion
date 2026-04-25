@@ -6,8 +6,12 @@ __pycache__/
 
 # Training outputs
 models/
+models_runpod/
 logs/
 MUJOCO_LOG.TXT
+
+# Local validation artifacts (rsynced checkpoints + per-run outputs)
+data/checkpoint_validations/
 
 # Rendered frames and videos
 experiments/frames/
