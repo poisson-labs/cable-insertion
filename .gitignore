@@ -1,25 +1,52 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+
+# Virtual environments and dependencies
 .venv/
 venv/
-__pycache__/
-*.pyc
-.DS_Store
+third_party/
 
-# Training outputs
+# Operating system and editor artifacts
+.DS_Store
+.env
+.claude/
+.cursor/
+.vscode/
+.idea/
+
+# Testing and linting caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Devlogs live in the vault only (repo-hygiene standard section 2.7)
+devlog.md
+DEVLOG*
+devlog*
+
+# Scratch and runbooks
+scratch/
+runbooks/
+
+# Training logs, outputs, and trackers
 models/
 models_runpod/
 logs/
+wandb/
 MUJOCO_LOG.TXT
 
-# Local validation artifacts (rsynced checkpoints + per-run outputs)
+# Local validation and artifact outputs
 data/checkpoint_validations/
+data/
 
 # Rendered frames and videos
 experiments/frames/
 experiments/*.mp4
 
-# Downloaded robot models (MuJoCo Menagerie)
-third_party/
-
-# Old root-level artifacts (pre-restructure)
+# Tracked model weights
 cable_ppo.zip
 cable_ppo_vecnormalize.pkl
