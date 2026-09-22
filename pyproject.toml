@@ -1,0 +1,57 @@
+[project]
+name = "cable-insertion"
+version = "0.1.0"
+description = "MuJoCo simulation and reinforcement learning baselines for autonomous cable insertion."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Taylor Kolasinski", email = "taylor@poissonlabs.ai" },
+]
+requires-python = ">=3.11"
+dependencies = [
+    "gymnasium>=1.0.0",
+    "mujoco>=3.0.0",
+    "stable-baselines3>=2.0.0",
+    "numpy>=1.26.0",
+    "torch>=2.0.0",
+    "tensorboard>=2.14.0",
+    "wandb>=0.16.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/poisson-labs/cable-insertion"
+Repository = "https://github.com/poisson-labs/cable-insertion"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.8.0",
+]
+
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["envs"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["envs", "eval", "experiments", "scripts", "tests", "training"]
+extend-exclude = [
+    "scratch",
+    "runbooks",
+    "third_party",
+    "venv",
+    ".venv",
+    "models_runpod",
+    "data",
+]
+
+[tool.ruff.lint]
+ignore = ["E402"]
