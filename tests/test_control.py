@@ -1,36 +1,30 @@
-import sys
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
-
 import numpy as np
 import mujoco
-import mujoco.viewer
-import time
+
 from envs.cable_env import SCENE_XML
 
-model = mujoco.MjModel.from_xml_path(SCENE_XML)
-data = mujoco.MjData(model)
 
-target = np.array([0.25, 0, 0.02])
+def test_direct_actuator_control():
+    model = mujoco.MjModel.from_xml_path(SCENE_XML)
+    data = mujoco.MjData(model)
 
-with mujoco.viewer.launch_passive(model, data) as viewer:
-    step = 0
-    while viewer.is_running():
-        data.ctrl[0] = target[0]
-        data.ctrl[1] = target[1]
-        data.ctrl[2] = target[2]
+    ctrl_target = np.array([0.1, 0.0, -0.05], dtype=np.float32)
+    data.ctrl[0] = ctrl_target[0]
+    data.ctrl[1] = ctrl_target[1]
+    data.ctrl[2] = ctrl_target[2]
 
+    # Headless simulation stepping
+    for _ in range(500):
         mujoco.mj_step(model, data)
-        viewer.sync()
 
-        if step % 500 == 0:
-            # sensordata is flat: [connector x,y,z, gripper x,y,z]
-            conn = data.sensordata[0:3]
-            grip = data.sensordata[3:6]
-            dist = np.linalg.norm(conn - np.array([0.15, 0, 0.05]))
-            print(f"connector: {conn.round(3)}, gripper: {grip.round(3)}, dist to socket: {dist:.3f}m")
+    # Verify slide joints tracked actuator control
+    np.testing.assert_allclose(data.qpos[0:3], ctrl_target, atol=0.01)
 
-        step += 1
-        time.sleep(0.002)
+    # sensordata contains connector [0:3] and gripper [3:6]
+    assert len(data.sensordata) >= 6
+    conn = data.sensordata[0:3]
+    grip = data.sensordata[3:6]
+
+    # Verify sensor coordinates are finite
+    assert np.all(np.isfinite(conn))
+    assert np.all(np.isfinite(grip))
