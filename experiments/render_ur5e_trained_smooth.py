@@ -62,6 +62,7 @@ OUT_PATH = ROOT / "experiments" / "frames" / "ur5e_trained_smooth.mp4"
 
 # ── Helpers ─────────────────────────────────────────────
 
+
 def lookat_quat(cam_pos, target, world_up=np.array([0.0, 0.0, 1.0])):
     """Compute MuJoCo camera quaternion [w,x,y,z] for look-at."""
     forward = np.asarray(target, dtype=float) - np.asarray(cam_pos, dtype=float)
@@ -74,16 +75,36 @@ def lookat_quat(cam_pos, target, world_up=np.array([0.0, 0.0, 1.0])):
     trace = R[0, 0] + R[1, 1] + R[2, 2]
     if trace > 0:
         s = 2.0 * np.sqrt(1.0 + trace)
-        w, x, y, z = 0.25 * s, (R[2, 1] - R[1, 2]) / s, (R[0, 2] - R[2, 0]) / s, (R[1, 0] - R[0, 1]) / s
+        w, x, y, z = (
+            0.25 * s,
+            (R[2, 1] - R[1, 2]) / s,
+            (R[0, 2] - R[2, 0]) / s,
+            (R[1, 0] - R[0, 1]) / s,
+        )
     elif R[0, 0] > R[1, 1] and R[0, 0] > R[2, 2]:
         s = 2.0 * np.sqrt(1.0 + R[0, 0] - R[1, 1] - R[2, 2])
-        w, x, y, z = (R[2, 1] - R[1, 2]) / s, 0.25 * s, (R[0, 1] + R[1, 0]) / s, (R[0, 2] + R[2, 0]) / s
+        w, x, y, z = (
+            (R[2, 1] - R[1, 2]) / s,
+            0.25 * s,
+            (R[0, 1] + R[1, 0]) / s,
+            (R[0, 2] + R[2, 0]) / s,
+        )
     elif R[1, 1] > R[2, 2]:
         s = 2.0 * np.sqrt(1.0 + R[1, 1] - R[0, 0] - R[2, 2])
-        w, x, y, z = (R[0, 2] - R[2, 0]) / s, (R[0, 1] + R[1, 0]) / s, 0.25 * s, (R[1, 2] + R[2, 1]) / s
+        w, x, y, z = (
+            (R[0, 2] - R[2, 0]) / s,
+            (R[0, 1] + R[1, 0]) / s,
+            0.25 * s,
+            (R[1, 2] + R[2, 1]) / s,
+        )
     else:
         s = 2.0 * np.sqrt(1.0 + R[2, 2] - R[0, 0] - R[1, 1])
-        w, x, y, z = (R[1, 0] - R[0, 1]) / s, (R[0, 2] + R[2, 0]) / s, (R[1, 2] + R[2, 1]) / s, 0.25 * s
+        w, x, y, z = (
+            (R[1, 0] - R[0, 1]) / s,
+            (R[0, 2] + R[2, 0]) / s,
+            (R[1, 2] + R[2, 1]) / s,
+            0.25 * s,
+        )
     return np.array([w, x, y, z])
 
 
@@ -93,11 +114,13 @@ def update_orbit_camera(model, cam_id, frame_idx):
     angle = ORBIT_START_ANGLE + t * ORBIT_REVOLUTIONS * 2 * np.pi
     height = ORBIT_HEIGHT_BASE + ORBIT_HEIGHT_AMP * np.sin(t * np.pi)
 
-    pos = ORBIT_CENTER + np.array([
-        ORBIT_RADIUS * np.cos(angle),
-        ORBIT_RADIUS * np.sin(angle),
-        height,
-    ])
+    pos = ORBIT_CENTER + np.array(
+        [
+            ORBIT_RADIUS * np.cos(angle),
+            ORBIT_RADIUS * np.sin(angle),
+            height,
+        ]
+    )
     model.cam_pos[cam_id] = pos
     model.cam_quat[cam_id] = lookat_quat(pos, ORBIT_CENTER)
 
@@ -114,9 +137,10 @@ def composite_pip(main_frame, pip_frames):
     for i, pip in enumerate(pip_frames):
         x = x_start + i * (PIP_W + 2 * PIP_BORDER + PIP_GAP)
         y = y_start
-        frame[y:y + strip_h, x:x + PIP_W + 2 * PIP_BORDER] = 20
-        frame[y + PIP_BORDER:y + PIP_BORDER + PIP_H,
-              x + PIP_BORDER:x + PIP_BORDER + PIP_W] = pip
+        frame[y : y + strip_h, x : x + PIP_W + 2 * PIP_BORDER] = 20
+        frame[y + PIP_BORDER : y + PIP_BORDER + PIP_H, x + PIP_BORDER : x + PIP_BORDER + PIP_W] = (
+            pip
+        )
     return frame
 
 
@@ -166,6 +190,7 @@ def get_dist(env):
 
 # ── Main ────────────────────────────────────────────────
 
+
 def main():
     print("Building UR5e env...")
     env = CableInsertionUR5eEnv(obs_mode="state", randomize=True)
@@ -188,8 +213,11 @@ def main():
     print(f"\nRendering to {OUT_PATH} ...")
 
     writer = imageio.get_writer(
-        str(OUT_PATH), fps=FPS, codec="libx264",
-        quality=8, pixelformat="yuv420p",
+        str(OUT_PATH),
+        fps=FPS,
+        codec="libx264",
+        quality=8,
+        pixelformat="yuv420p",
     )
 
     frame_idx = 0
@@ -230,8 +258,10 @@ def main():
 
                 if dist < SUCCESS_DIST:
                     targets_reached += 1
-                    print(f"  Target {targets_reached} reached at control step "
-                          f"{control_step} (dist={dist * 100:.2f}cm)")
+                    print(
+                        f"  Target {targets_reached} reached at control step "
+                        f"{control_step} (dist={dist * 100:.2f}cm)"
+                    )
                     is_success = True
                     freeze_remaining = FREEZE_FRAMES
 
@@ -239,8 +269,7 @@ def main():
         update_orbit_camera(m, cam_id, frame_idx)
 
         main_frame = env.render_camera(MAIN_CAM, width=MAIN_W, height=MAIN_H)
-        pips = [env.render_camera(c, width=PIP_W, height=PIP_H)
-                for c in PIP_CAMS]
+        pips = [env.render_camera(c, width=PIP_W, height=PIP_H) for c in PIP_CAMS]
 
         frame = composite_pip(main_frame, pips)
         frame = burn_hud(frame, targets_reached, dist, is_success)
@@ -251,8 +280,7 @@ def main():
             elapsed = time.time() - t0
             fps_r = frame_idx / elapsed
             eta = (N_FRAMES - frame_idx) / fps_r
-            print(f"  frame {frame_idx}/{N_FRAMES}  "
-                  f"({fps_r:.1f} render-fps, ETA {eta:.0f}s)")
+            print(f"  frame {frame_idx}/{N_FRAMES}  ({fps_r:.1f} render-fps, ETA {eta:.0f}s)")
 
     writer.close()
 
@@ -261,8 +289,10 @@ def main():
     print(f"Saved: {OUT_PATH}")
     print(f"Targets reached: {targets_reached}")
     print(f"Control steps used: {control_step}")
-    print(f"Sim time: {control_step * CONTROL_DT:.2f}s shown over {DURATION}s video "
-          f"({DURATION / (control_step * CONTROL_DT):.1f}x slow-mo)")
+    print(
+        f"Sim time: {control_step * CONTROL_DT:.2f}s shown over {DURATION}s video "
+        f"({DURATION / (control_step * CONTROL_DT):.1f}x slow-mo)"
+    )
     env.close()
 
 

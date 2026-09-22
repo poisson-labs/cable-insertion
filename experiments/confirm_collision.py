@@ -13,9 +13,9 @@ obs, _ = env.reset()
 # Lift, then move over, then drop.
 # Waypoints (action coordinates):
 waypoints = [
-    np.array([0.0, 0, 0.1]),   # Lift gripper to z=+0.1 (abs 0.3)
+    np.array([0.0, 0, 0.1]),  # Lift gripper to z=+0.1 (abs 0.3)
     np.array([0.08, 0, 0.1]),  # Move over socket (abs x=0.18)
-    np.array([0.08, 0, 0.0])   # Drop down
+    np.array([0.08, 0, 0.0]),  # Drop down
 ]
 
 print("Testing 'Lift -> Move -> Drop' trajectory...")

@@ -55,7 +55,9 @@ def test_ur5e_only():
     mujoco.mj_forward(model, data)
 
     print(f"  Bodies: {model.nbody}, Joints: {model.njnt}, Actuators: {model.nu}")
-    print(f"  Joints: {[mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, i) for i in range(model.njnt)]}")
+    print(
+        f"  Joints: {[mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, i) for i in range(model.njnt)]}"
+    )
     print(f"  Home qpos: {data.qpos.round(3)}")
 
     save(render_frame(model, data), "ur5e_home.png")
@@ -126,8 +128,8 @@ def test_actuation(model, data):
         data.ctrl[:] = home_ctrl
 
         # Arm: sweep shoulder_pan and elbow
-        data.ctrl[0] = home_ctrl[0] + 0.5 * np.sin(t)   # shoulder_pan
-        data.ctrl[2] = home_ctrl[2] + 0.3 * np.sin(2*t)  # elbow
+        data.ctrl[0] = home_ctrl[0] + 0.5 * np.sin(t)  # shoulder_pan
+        data.ctrl[2] = home_ctrl[2] + 0.3 * np.sin(2 * t)  # elbow
 
         # Gripper: open/close cycle (0=open, 255=closed)
         data.ctrl[grip_id] = 127.5 + 127.5 * np.sin(t)
@@ -150,6 +152,7 @@ def test_actuation(model, data):
 def run_viewer(model, data):
     """Open interactive viewer."""
     import mujoco.viewer
+
     key_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_KEY, "home")
     mujoco.mj_resetDataKeyframe(model, data, key_id)
     mujoco.mj_forward(model, data)

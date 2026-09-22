@@ -23,9 +23,9 @@ logs_dir.mkdir(exist_ok=True)
 
 env = CableInsertionUR5eEnv(obs_mode="state", randomize=True)
 
-print(f"{'='*60}")
+print(f"{'=' * 60}")
 print(f"  UR5e PPO State Training — {TIMESTEPS:,} steps")
-print(f"{'='*60}")
+print(f"{'=' * 60}")
 print(f"  Action space:  {env.action_space}")
 print(f"  Obs space:     {env.observation_space}")
 
@@ -57,10 +57,10 @@ elapsed = time.time() - t0
 
 model.save(str(models_dir / "ur5e_state_2M"))
 
-print(f"\n{'='*60}")
-print(f"  Done in {elapsed/3600:.1f}h")
+print(f"\n{'=' * 60}")
+print(f"  Done in {elapsed / 3600:.1f}h")
 print(f"  Saved: {models_dir / 'ur5e_state_2M.zip'}")
 print(f"  Checkpoints: {models_dir / 'ur5e_state_ppo_*_steps.zip'}")
-print(f"{'='*60}")
+print(f"{'=' * 60}")
 
 env.close()

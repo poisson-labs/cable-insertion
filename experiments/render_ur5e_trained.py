@@ -58,9 +58,10 @@ def composite_pip(main_frame, pip_frames):
         x = x_start + i * (PIP_W + 2 * PIP_BORDER + PIP_GAP)
         y = y_start
 
-        frame[y:y + strip_h, x:x + PIP_W + 2 * PIP_BORDER] = 20
-        frame[y + PIP_BORDER:y + PIP_BORDER + PIP_H,
-              x + PIP_BORDER:x + PIP_BORDER + PIP_W] = pip
+        frame[y : y + strip_h, x : x + PIP_W + 2 * PIP_BORDER] = 20
+        frame[y + PIP_BORDER : y + PIP_BORDER + PIP_H, x + PIP_BORDER : x + PIP_BORDER + PIP_W] = (
+            pip
+        )
 
     return frame
 
@@ -68,13 +69,14 @@ def composite_pip(main_frame, pip_frames):
 def burn_hud(frame, episode, step, dist, done):
     """Burn episode/step/distance HUD into the top-left corner."""
     from PIL import Image, ImageDraw
+
     img = Image.fromarray(frame)
     draw = ImageDraw.Draw(img)
 
     # Semi-transparent bar
     draw.rectangle([0, 0, 340, 32], fill=(0, 0, 0, 200))
 
-    status = "SUCCESS" if done else f"{dist*100:.1f}cm"
+    status = "SUCCESS" if done else f"{dist * 100:.1f}cm"
     color = (100, 255, 100) if done else (255, 255, 255)
     text = f"Episode {episode}/{N_EPISODES}  Step {step:3d}  Dist: {status}"
     draw.text((10, 8), text, fill=color)
@@ -100,8 +102,11 @@ def main():
     print(f"\nRendering to {OUT_PATH} ...")
 
     writer = imageio.get_writer(
-        str(OUT_PATH), fps=FPS, codec="libx264",
-        quality=8, pixelformat="yuv420p",
+        str(OUT_PATH),
+        fps=FPS,
+        codec="libx264",
+        quality=8,
+        pixelformat="yuv420p",
     )
 
     obs, _ = env.reset()
@@ -123,11 +128,14 @@ def main():
                 ep_done = False
         elif ep_done or ep_step >= 200:
             # Episode ended — start pause or next episode
-            ep_stats.append({"ep": episode, "steps": ep_step,
-                             "dist": last_dist, "success": ep_done})
-            print(f"  Episode {episode}: {ep_step} steps, "
-                  f"dist={last_dist*100:.2f}cm"
-                  f"{' SUCCESS' if ep_done else ''}")
+            ep_stats.append(
+                {"ep": episode, "steps": ep_step, "dist": last_dist, "success": ep_done}
+            )
+            print(
+                f"  Episode {episode}: {ep_step} steps, "
+                f"dist={last_dist * 100:.2f}cm"
+                f"{' SUCCESS' if ep_done else ''}"
+            )
             if episode < N_EPISODES:
                 pause_remaining = PAUSE_AFTER_SUCCESS
             else:
@@ -143,8 +151,7 @@ def main():
 
         # Render all cameras
         main = env.render_camera(MAIN_CAM, width=MAIN_W, height=MAIN_H)
-        pips = [env.render_camera(c, width=PIP_W, height=PIP_H)
-                for c in PIP_CAMS]
+        pips = [env.render_camera(c, width=PIP_W, height=PIP_H) for c in PIP_CAMS]
 
         frame = composite_pip(main, pips)
         frame = burn_hud(frame, episode, ep_step, last_dist, ep_done)
@@ -154,13 +161,12 @@ def main():
             elapsed = time.time() - t0
             fps_render = (i + 1) / elapsed
             eta = (N_FRAMES - i - 1) / fps_render
-            print(f"  frame {i+1}/{N_FRAMES}  "
-                  f"({fps_render:.1f} render-fps, ETA {eta:.0f}s)")
+            print(f"  frame {i + 1}/{N_FRAMES}  ({fps_render:.1f} render-fps, ETA {eta:.0f}s)")
 
     writer.close()
 
     elapsed = time.time() - t0
-    print(f"\nDone! {elapsed:.1f}s total ({N_FRAMES/elapsed:.1f} render-fps)")
+    print(f"\nDone! {elapsed:.1f}s total ({N_FRAMES / elapsed:.1f} render-fps)")
     print(f"Saved: {OUT_PATH}")
 
     if ep_stats:
@@ -168,8 +174,7 @@ def main():
         print(f"\nEpisode summary: {successes}/{len(ep_stats)} successes")
         for s in ep_stats:
             tag = "OK" if s["success"] else "FAIL"
-            print(f"  ep{s['ep']}: {s['steps']:3d} steps, "
-                  f"{s['dist']*100:.2f}cm [{tag}]")
+            print(f"  ep{s['ep']}: {s['steps']:3d} steps, {s['dist'] * 100:.2f}cm [{tag}]")
 
     env.close()
 

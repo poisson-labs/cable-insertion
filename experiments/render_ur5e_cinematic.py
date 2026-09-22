@@ -20,7 +20,7 @@ sys.path.insert(0, str(ROOT))
 import numpy as np
 import mujoco
 import imageio
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 from stable_baselines3 import PPO
 from envs.cable_env_ur5e import CableInsertionUR5eEnv, MAX_JOINT_VEL, CONTROL_DT
 
@@ -32,19 +32,19 @@ W, H = 1280, 720
 
 # ── Shot list: cycle through these on each reach ────────
 SHOT_SEQUENCE = [
-    "third_person",   # wide establishing
-    "wrist_center",   # insertion POV
-    "side",           # front-right profile
-    "overhead",       # top-down
-    "wrist_left",     # left fixed
-    "third_person",   # back to wide
-    "wrist_right",    # right fixed
+    "third_person",  # wide establishing
+    "wrist_center",  # insertion POV
+    "side",  # front-right profile
+    "overhead",  # top-down
+    "wrist_left",  # left fixed
+    "third_person",  # back to wide
+    "wrist_right",  # right fixed
 ]
 
 # ── Timing ──────────────────────────────────────────────
-TITLE_FRAMES = int(FPS * 2.5)        # 2.5s title card
-FREEZE_FRAMES = int(FPS * 1.2)       # 1.2s hold on success
-FADE_FRAMES = int(FPS * 0.3)         # 0.3s fade from black on cut
+TITLE_FRAMES = int(FPS * 2.5)  # 2.5s title card
+FREEZE_FRAMES = int(FPS * 1.2)  # 1.2s hold on success
+FADE_FRAMES = int(FPS * 0.3)  # 0.3s fade from black on cut
 N_SUBSTEPS = 25
 SUCCESS_DIST = 0.02
 
@@ -61,6 +61,7 @@ OUT_PATH = ROOT / "experiments" / "frames" / "ur5e_cinematic.mp4"
 
 # ── Helpers ─────────────────────────────────────────────
 
+
 def lookat_quat(cam_pos, target, world_up=np.array([0.0, 0.0, 1.0])):
     forward = np.asarray(target, dtype=float) - np.asarray(cam_pos, dtype=float)
     forward /= np.linalg.norm(forward)
@@ -71,27 +72,49 @@ def lookat_quat(cam_pos, target, world_up=np.array([0.0, 0.0, 1.0])):
     trace = R[0, 0] + R[1, 1] + R[2, 2]
     if trace > 0:
         s = 2.0 * np.sqrt(1.0 + trace)
-        w, x, y, z = 0.25 * s, (R[2, 1] - R[1, 2]) / s, (R[0, 2] - R[2, 0]) / s, (R[1, 0] - R[0, 1]) / s
+        w, x, y, z = (
+            0.25 * s,
+            (R[2, 1] - R[1, 2]) / s,
+            (R[0, 2] - R[2, 0]) / s,
+            (R[1, 0] - R[0, 1]) / s,
+        )
     elif R[0, 0] > R[1, 1] and R[0, 0] > R[2, 2]:
         s = 2.0 * np.sqrt(1.0 + R[0, 0] - R[1, 1] - R[2, 2])
-        w, x, y, z = (R[2, 1] - R[1, 2]) / s, 0.25 * s, (R[0, 1] + R[1, 0]) / s, (R[0, 2] + R[2, 0]) / s
+        w, x, y, z = (
+            (R[2, 1] - R[1, 2]) / s,
+            0.25 * s,
+            (R[0, 1] + R[1, 0]) / s,
+            (R[0, 2] + R[2, 0]) / s,
+        )
     elif R[1, 1] > R[2, 2]:
         s = 2.0 * np.sqrt(1.0 + R[1, 1] - R[0, 0] - R[2, 2])
-        w, x, y, z = (R[0, 2] - R[2, 0]) / s, (R[0, 1] + R[1, 0]) / s, 0.25 * s, (R[1, 2] + R[2, 1]) / s
+        w, x, y, z = (
+            (R[0, 2] - R[2, 0]) / s,
+            (R[0, 1] + R[1, 0]) / s,
+            0.25 * s,
+            (R[1, 2] + R[2, 1]) / s,
+        )
     else:
         s = 2.0 * np.sqrt(1.0 + R[2, 2] - R[0, 0] - R[1, 1])
-        w, x, y, z = (R[1, 0] - R[0, 1]) / s, (R[0, 2] + R[2, 0]) / s, (R[1, 2] + R[2, 1]) / s, 0.25 * s
+        w, x, y, z = (
+            (R[1, 0] - R[0, 1]) / s,
+            (R[0, 2] + R[2, 0]) / s,
+            (R[1, 2] + R[2, 1]) / s,
+            0.25 * s,
+        )
     return np.array([w, x, y, z])
 
 
 def update_orbit(model, cam_id, t_norm):
     """Slowly orbit third_person camera. t_norm is 0→1 over the video."""
     angle = ORBIT_START + t_norm * ORBIT_SPEED * 2 * np.pi
-    pos = ORBIT_CENTER + np.array([
-        ORBIT_RADIUS * np.cos(angle),
-        ORBIT_RADIUS * np.sin(angle),
-        ORBIT_HEIGHT,
-    ])
+    pos = ORBIT_CENTER + np.array(
+        [
+            ORBIT_RADIUS * np.cos(angle),
+            ORBIT_RADIUS * np.sin(angle),
+            ORBIT_HEIGHT,
+        ]
+    )
     model.cam_pos[cam_id] = pos
     model.cam_quat[cam_id] = lookat_quat(pos, ORBIT_CENTER)
 
@@ -154,6 +177,7 @@ def randomize_target(env, rng):
 
 # ── Main ────────────────────────────────────────────────
 
+
 def main():
     print("Building UR5e env...")
     env = CableInsertionUR5eEnv(obs_mode="vision", randomize=True)
@@ -173,16 +197,21 @@ def main():
     print(f"\nRendering to {OUT_PATH} ...")
 
     writer = imageio.get_writer(
-        str(OUT_PATH), fps=FPS, codec="libx264",
-        quality=8, pixelformat="yuv420p",
+        str(OUT_PATH),
+        fps=FPS,
+        codec="libx264",
+        quality=8,
+        pixelformat="yuv420p",
     )
 
     # ── Title card ──
-    title = make_title_card([
-        "UR5e Cable Insertion",
-        "",
-        "Vision Policy  /  4M Steps  /  100% Success Rate",
-    ])
+    title = make_title_card(
+        [
+            "UR5e Cable Insertion",
+            "",
+            "Vision Policy  /  4M Steps  /  100% Success Rate",
+        ]
+    )
     for i in range(TITLE_FRAMES):
         # Fade in over first 1s, hold, fade out over last 0.5s
         if i < FPS * 1.0:
@@ -234,8 +263,10 @@ def main():
 
                 if dist < SUCCESS_DIST:
                     targets_reached += 1
-                    print(f"  Target {targets_reached} reached "
-                          f"(dist={dist * 100:.2f}cm, cam={current_cam})")
+                    print(
+                        f"  Target {targets_reached} reached "
+                        f"(dist={dist * 100:.2f}cm, cam={current_cam})"
+                    )
                     is_success = True
                     freeze_remaining = FREEZE_FRAMES
 
@@ -260,8 +291,7 @@ def main():
             elapsed = time.time() - t0
             fps_r = frame_idx / elapsed
             eta = (N_FRAMES - frame_idx) / fps_r
-            print(f"  frame {frame_idx}/{N_FRAMES}  "
-                  f"({fps_r:.1f} render-fps, ETA {eta:.0f}s)")
+            print(f"  frame {frame_idx}/{N_FRAMES}  ({fps_r:.1f} render-fps, ETA {eta:.0f}s)")
 
     writer.close()
 
@@ -269,7 +299,9 @@ def main():
     print(f"\nDone! {elapsed:.1f}s total ({N_FRAMES / elapsed:.1f} render-fps)")
     print(f"Saved: {OUT_PATH}")
     print(f"Targets reached: {targets_reached}")
-    print(f"Shots used: {[SHOT_SEQUENCE[i % len(SHOT_SEQUENCE)] for i in range(targets_reached + 1)]}")
+    print(
+        f"Shots used: {[SHOT_SEQUENCE[i % len(SHOT_SEQUENCE)] for i in range(targets_reached + 1)]}"
+    )
     env.close()
 
 

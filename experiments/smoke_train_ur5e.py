@@ -22,9 +22,9 @@ logs_dir.mkdir(exist_ok=True)
 
 
 def run_smoke(mode):
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  UR5e PPO Smoke Test — {mode} mode — {TIMESTEPS:,} steps")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     env = CableInsertionUR5eEnv(
         obs_mode=mode,
@@ -69,8 +69,10 @@ if __name__ == "__main__":
     results.append(run_smoke("state"))
     results.append(run_smoke("vision"))
 
-    print(f"\n{'='*60}")
-    print(f"  Summary")
-    print(f"{'='*60}")
+    print(f"\n{'=' * 60}")
+    print("  Summary")
+    print(f"{'=' * 60}")
     for r in results:
-        print(f"  {r['mode']:8s}  {r['elapsed']:6.1f}s  {r['fps']:6.0f} fps  {r['rss_mb']:.0f} MB RSS")
+        print(
+            f"  {r['mode']:8s}  {r['elapsed']:6.1f}s  {r['fps']:6.0f} fps  {r['rss_mb']:.0f} MB RSS"
+        )

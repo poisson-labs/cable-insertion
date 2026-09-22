@@ -30,9 +30,9 @@ MAIN_CAM = "third_person"
 # PiP cameras
 PIP_CAMS = ["wrist_left", "wrist_center", "wrist_right"]
 PIP_W, PIP_H = 200, 150
-PIP_BORDER = 2       # border thickness around each pip
-PIP_GAP = 8          # gap between pip panels
-PIP_MARGIN = 16      # margin from frame edge
+PIP_BORDER = 2  # border thickness around each pip
+PIP_GAP = 8  # gap between pip panels
+PIP_MARGIN = 16  # margin from frame edge
 
 OUT_PATH = ROOT / "experiments" / "frames" / "ur5e_demo_v6.mp4"
 
@@ -94,11 +94,12 @@ def composite_pip(main_frame, pip_frames):
         y = y_start
 
         # Draw border (dark background)
-        frame[y:y + strip_h, x:x + PIP_W + 2 * PIP_BORDER] = 20
+        frame[y : y + strip_h, x : x + PIP_W + 2 * PIP_BORDER] = 20
 
         # Paste pip image inside border
-        frame[y + PIP_BORDER:y + PIP_BORDER + PIP_H,
-              x + PIP_BORDER:x + PIP_BORDER + PIP_W] = pip
+        frame[y + PIP_BORDER : y + PIP_BORDER + PIP_H, x + PIP_BORDER : x + PIP_BORDER + PIP_W] = (
+            pip
+        )
 
     return frame
 
@@ -117,7 +118,9 @@ def main():
     print(f"\nRendering to {OUT_PATH} ...")
 
     writer = imageio.get_writer(
-        str(OUT_PATH), fps=FPS, codec="libx264",
+        str(OUT_PATH),
+        fps=FPS,
+        codec="libx264",
         quality=8,  # high quality
         pixelformat="yuv420p",  # broad compatibility
     )
@@ -141,13 +144,12 @@ def main():
             elapsed = time.time() - t0
             fps_render = (i + 1) / elapsed
             eta = (N_FRAMES - i - 1) / fps_render
-            print(f"  frame {i+1}/{N_FRAMES}  "
-                  f"({fps_render:.1f} render-fps, ETA {eta:.0f}s)")
+            print(f"  frame {i + 1}/{N_FRAMES}  ({fps_render:.1f} render-fps, ETA {eta:.0f}s)")
 
     writer.close()
 
     elapsed = time.time() - t0
-    print(f"\nDone! {elapsed:.1f}s total ({N_FRAMES/elapsed:.1f} render-fps)")
+    print(f"\nDone! {elapsed:.1f}s total ({N_FRAMES / elapsed:.1f} render-fps)")
     print(f"Saved: {OUT_PATH}")
     env.close()
 

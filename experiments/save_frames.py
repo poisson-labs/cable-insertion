@@ -25,7 +25,9 @@ for i in range(10):
         frame = env.render_camera(cam)
         Image.fromarray(frame).save(output_dir / f"step_{i:02d}_{cam}.png")
 
-    print(f"Step {i:2d}: dist={info['distance']:.4f}  saved {len(CAMERAS)} views ({frame.shape[1]}x{frame.shape[0]})")
+    print(
+        f"Step {i:2d}: dist={info['distance']:.4f}  saved {len(CAMERAS)} views ({frame.shape[1]}x{frame.shape[0]})"
+    )
 
     if done:
         obs, _ = env.reset()

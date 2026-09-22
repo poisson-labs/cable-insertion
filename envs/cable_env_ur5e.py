@@ -46,8 +46,8 @@ CABLE_DAMPING = 0.15
 CABLE_STIFFNESS = 0.08
 
 # Simulation timing
-PHYSICS_DT = 0.002          # 500Hz physics
-N_SUBSTEPS = 25              # 25 substeps = 0.05s control period (20Hz)
+PHYSICS_DT = 0.002  # 500Hz physics
+N_SUBSTEPS = 25  # 25 substeps = 0.05s control period (20Hz)
 CONTROL_DT = PHYSICS_DT * N_SUBSTEPS
 
 DEFAULT_RENDER_WIDTH = 640
@@ -58,9 +58,16 @@ STATE_DIM = 22  # joint_pos(6) + joint_vel(6) + ft(6) + grip(1) + target(3)
 class CableInsertionUR5eEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 20}
 
-    def __init__(self, max_steps=200, randomize=True, render_mode=None,
-                 camera_name="overhead", render_width=DEFAULT_RENDER_WIDTH,
-                 render_height=DEFAULT_RENDER_HEIGHT, obs_mode="state"):
+    def __init__(
+        self,
+        max_steps=200,
+        randomize=True,
+        render_mode=None,
+        camera_name="overhead",
+        render_width=DEFAULT_RENDER_WIDTH,
+        render_height=DEFAULT_RENDER_HEIGHT,
+        obs_mode="state",
+    ):
         self.max_steps = max_steps
         self.randomize = randomize
         self.render_mode = render_mode
@@ -105,13 +112,13 @@ class CableInsertionUR5eEnv(gym.Env):
         if obs_mode == "state":
             self.observation_space = self._state_space
         elif obs_mode == "vision":
-            cam_space = spaces.Box(
-                0, 255, shape=(VISION_SIZE, VISION_SIZE, 3), dtype=np.uint8
+            cam_space = spaces.Box(0, 255, shape=(VISION_SIZE, VISION_SIZE, 3), dtype=np.uint8)
+            self.observation_space = spaces.Dict(
+                {
+                    **{cam: cam_space for cam in VISION_CAMERAS},
+                    "state": self._state_space,
+                }
             )
-            self.observation_space = spaces.Dict({
-                **{cam: cam_space for cam in VISION_CAMERAS},
-                "state": self._state_space,
-            })
         else:
             raise ValueError(f"Unknown obs_mode={obs_mode!r}")
 
@@ -233,7 +240,7 @@ class CableInsertionUR5eEnv(gym.Env):
         oc = spec.worldbody.add_camera()
         oc.name = "overhead"
         oc.pos = [-0.1, 0.3, 1.8]
-        oc.quat = [1, 0, 0, 0]   # default: looks along -Z (downward)
+        oc.quat = [1, 0, 0, 0]  # default: looks along -Z (downward)
         oc.fovy = 70
 
         # Side (front-right, looking toward workspace)
@@ -257,7 +264,7 @@ class CableInsertionUR5eEnv(gym.Env):
         cam_c = grip_body.add_camera()
         cam_c.name = "wrist_center"
         cam_c.pos = [0, 0.02, 0.10]
-        cam_c.quat = [0, 0, 1, 0]       # 180° around Y → look along +Z
+        cam_c.quat = [0, 0, 1, 0]  # 180° around Y → look along +Z
         cam_c.fovy = 90
 
         # Left & right cameras: fixed on worldbody, aimed at socket area.
@@ -349,12 +356,11 @@ class CableInsertionUR5eEnv(gym.Env):
 
     def _cache_ids(self):
         m = self.model
-        self.connector_id = mujoco.mj_name2id(
-            m, mujoco.mjtObj.mjOBJ_BODY, "connector")
-        self.socket_id = mujoco.mj_name2id(
-            m, mujoco.mjtObj.mjOBJ_BODY, "socket")
+        self.connector_id = mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, "connector")
+        self.socket_id = mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, "socket")
         self.grip_act_id = mujoco.mj_name2id(
-            m, mujoco.mjtObj.mjOBJ_ACTUATOR, "gripper-fingers_actuator")
+            m, mujoco.mjtObj.mjOBJ_ACTUATOR, "gripper-fingers_actuator"
+        )
 
         # Sensor data slices (order matches _add_sensors)
         self.sens_conn_pos = slice(0, 3)
@@ -466,20 +472,18 @@ class CableInsertionUR5eEnv(gym.Env):
 
     def _get_state_obs(self):
         d = self.data
-        joint_pos = d.qpos[self.arm_qpos].copy()       # 6
-        joint_vel = d.qvel[self.arm_qvel].copy()        # 6
+        joint_pos = d.qpos[self.arm_qpos].copy()  # 6
+        joint_vel = d.qvel[self.arm_qvel].copy()  # 6
         ft_force = d.sensordata[self.sens_force].copy()  # 3
-        ft_torque = d.sensordata[self.sens_torque].copy() # 3
+        ft_torque = d.sensordata[self.sens_torque].copy()  # 3
         grip = np.array([d.ctrl[self.grip_act_id] / 255.0])  # 1
-        return np.concatenate([
-            joint_pos, joint_vel, ft_force, ft_torque, grip, self.target
-        ]).astype(np.float32)
+        return np.concatenate(
+            [joint_pos, joint_vel, ft_force, ft_torque, grip, self.target]
+        ).astype(np.float32)
 
     def _get_vision_obs(self, state):
         if self._obs_renderer is None:
-            self._obs_renderer = mujoco.Renderer(
-                self.model, height=VISION_SIZE, width=VISION_SIZE
-            )
+            self._obs_renderer = mujoco.Renderer(self.model, height=VISION_SIZE, width=VISION_SIZE)
         obs = {}
         for cam in VISION_CAMERAS:
             self._obs_renderer.update_scene(self.data, camera=cam)
@@ -517,6 +521,7 @@ class CableInsertionUR5eEnv(gym.Env):
     def _render_human(self):
         if self._viewer is None or not self._viewer.is_running():
             import mujoco.viewer
+
             self._viewer = mujoco.viewer.launch_passive(self.model, self.data)
         self._viewer.sync()
 

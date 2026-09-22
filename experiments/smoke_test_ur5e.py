@@ -11,6 +11,7 @@ Tests:
 
 import sys
 from pathlib import Path
+
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
@@ -22,8 +23,10 @@ def test_state_mode():
     print("=== Test 1: State mode — build, reset, step ===")
     env = CableInsertionUR5eEnv(obs_mode="state", randomize=False)
 
-    print(f"  Model: nbody={env.model.nbody}, njnt={env.model.njnt}, "
-          f"nu={env.model.nu}, nsensor={env.model.nsensor}")
+    print(
+        f"  Model: nbody={env.model.nbody}, njnt={env.model.njnt}, "
+        f"nu={env.model.nu}, nsensor={env.model.nsensor}"
+    )
     print(f"  nq={env.model.nq}, nv={env.model.nv}")
     print(f"  Action space: {env.action_space}")
     print(f"  Obs space: {env.observation_space}")
@@ -32,7 +35,7 @@ def test_state_mode():
     print(f"\n  reset() obs shape: {obs.shape} (expected ({STATE_DIM},))")
     assert obs.shape == (STATE_DIM,), f"Expected ({STATE_DIM},), got {obs.shape}"
 
-    print(f"  obs breakdown:")
+    print("  obs breakdown:")
     print(f"    joint_pos:  {obs[0:6].round(3)}")
     print(f"    joint_vel:  {obs[6:12].round(3)}")
     print(f"    ft_force:   {obs[12:15].round(3)}")
@@ -46,12 +49,12 @@ def test_state_mode():
     assert obs2.shape == (STATE_DIM,)
 
     # Step with random actions
-    print(f"\n  Running 20 random steps...")
+    print("\n  Running 20 random steps...")
     for i in range(20):
         action = env.action_space.sample()
         obs, reward, done, truncated, info = env.step(action)
         if i % 5 == 0:
-            print(f"    step {i+1}: dist={info['distance']:.4f}, reward={reward:.2f}")
+            print(f"    step {i + 1}: dist={info['distance']:.4f}, reward={reward:.2f}")
     print("  OK")
     env.close()
     return True
@@ -87,9 +90,7 @@ def test_vision_mode():
 
 def test_render():
     print("\n=== Test 3: Render frames ===")
-    env = CableInsertionUR5eEnv(
-        obs_mode="state", render_mode="rgb_array", randomize=False
-    )
+    env = CableInsertionUR5eEnv(obs_mode="state", render_mode="rgb_array", randomize=False)
     env.reset()
 
     cameras = ["overhead", "side", "wrist_center", "wrist_left", "wrist_right"]
@@ -98,11 +99,14 @@ def test_render():
 
     for cam_name in cameras:
         frame = env.render_camera(cam_name)
-        print(f"  {cam_name}: shape={frame.shape}, "
-              f"black={np.mean(frame.sum(axis=-1) == 0) * 100:.0f}%")
+        print(
+            f"  {cam_name}: shape={frame.shape}, "
+            f"black={np.mean(frame.sum(axis=-1) == 0) * 100:.0f}%"
+        )
 
         # Save frame
         from PIL import Image
+
         Image.fromarray(frame).save(frames_dir / f"ur5e_{cam_name}.png")
 
     print(f"  Saved to {frames_dir}/ur5e_*.png")
@@ -143,8 +147,9 @@ def test_episode():
         if done or truncated:
             break
 
-    print(f"  Finished at step {step+1}, total_reward={total_reward:.1f}, "
-          f"min_dist={min_dist:.4f}")
+    print(
+        f"  Finished at step {step + 1}, total_reward={total_reward:.1f}, min_dist={min_dist:.4f}"
+    )
     print(f"  done={done}, truncated={truncated}")
     env.close()
     return True
@@ -152,14 +157,20 @@ def test_episode():
 
 if __name__ == "__main__":
     results = []
-    for test_fn in [test_state_mode, test_vision_mode, test_render,
-                    test_domain_randomization, test_episode]:
+    for test_fn in [
+        test_state_mode,
+        test_vision_mode,
+        test_render,
+        test_domain_randomization,
+        test_episode,
+    ]:
         try:
             ok = test_fn()
             results.append((test_fn.__name__, ok))
         except Exception as e:
             print(f"  FAILED: {e}")
             import traceback
+
             traceback.print_exc()
             results.append((test_fn.__name__, False))
 

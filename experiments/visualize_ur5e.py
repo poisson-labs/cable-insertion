@@ -40,11 +40,11 @@ def make_montage(env):
     """Scripted motion sequence — captures 4 camera views at 5 keyframes."""
     # Predefined actions that produce visible arm + gripper motion
     scripts = [
-        {"joints": [0.5, 0.0, 0.0, 0.0, 0.0, 0.0], "grip": -1.0},   # shoulder pan
-        {"joints": [0.0, 0.4, -0.3, 0.0, 0.0, 0.0], "grip": -1.0},   # shoulder lift + elbow
-        {"joints": [-0.3, 0.0, 0.0, 0.5, 0.3, 0.0], "grip": 1.0},    # wrist motion + close grip
-        {"joints": [0.0, -0.3, 0.4, 0.0, 0.0, 0.5], "grip": 1.0},    # elbow + wrist roll
-        {"joints": [-0.4, 0.2, -0.2, -0.3, 0.0, 0.0], "grip": -0.5}, # return + open grip
+        {"joints": [0.5, 0.0, 0.0, 0.0, 0.0, 0.0], "grip": -1.0},  # shoulder pan
+        {"joints": [0.0, 0.4, -0.3, 0.0, 0.0, 0.0], "grip": -1.0},  # shoulder lift + elbow
+        {"joints": [-0.3, 0.0, 0.0, 0.5, 0.3, 0.0], "grip": 1.0},  # wrist motion + close grip
+        {"joints": [0.0, -0.3, 0.4, 0.0, 0.0, 0.5], "grip": 1.0},  # elbow + wrist roll
+        {"joints": [-0.4, 0.2, -0.2, -0.3, 0.0, 0.0], "grip": -0.5},  # return + open grip
     ]
 
     rows = []
@@ -61,7 +61,6 @@ def make_montage(env):
         tiles = []
         for cam in MONTAGE_CAMERAS:
             frame = env.render_camera(cam, width=TILE_W, height=TILE_H)
-            label = cam.replace("_", " ").title() if i == 0 else f"t={i}"
             frame = add_label(frame, f"{cam}" if i == 0 else f"step {i * STEPS_BETWEEN_CAPTURES}")
             tiles.append(frame)
 
@@ -97,13 +96,13 @@ def run_viewer(env):
         action = np.zeros(7, dtype=np.float32)
 
         # Sinusoidal sweeps across joints for visual appeal
-        action[0] = 0.4 * np.sin(t * 0.8)          # shoulder pan
-        action[1] = 0.3 * np.sin(t * 0.5 + 1.0)    # shoulder lift
-        action[2] = 0.35 * np.sin(t * 0.7 + 2.0)   # elbow
-        action[3] = 0.5 * np.sin(t * 1.1)           # wrist 1
-        action[4] = 0.4 * np.sin(t * 0.9 + 0.5)    # wrist 2
-        action[5] = 0.3 * np.sin(t * 1.3 + 1.5)    # wrist 3
-        action[6] = np.sin(t * 0.4)                 # gripper open/close
+        action[0] = 0.4 * np.sin(t * 0.8)  # shoulder pan
+        action[1] = 0.3 * np.sin(t * 0.5 + 1.0)  # shoulder lift
+        action[2] = 0.35 * np.sin(t * 0.7 + 2.0)  # elbow
+        action[3] = 0.5 * np.sin(t * 1.1)  # wrist 1
+        action[4] = 0.4 * np.sin(t * 0.9 + 0.5)  # wrist 2
+        action[5] = 0.3 * np.sin(t * 1.3 + 1.5)  # wrist 3
+        action[6] = np.sin(t * 0.4)  # gripper open/close
 
         env.step(action)
         viewer.sync()
@@ -115,20 +114,22 @@ def run_viewer(env):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--viewer", action="store_true",
-                        help="Open interactive 3D viewer after saving montage")
+    parser.add_argument(
+        "--viewer", action="store_true", help="Open interactive 3D viewer after saving montage"
+    )
     args = parser.parse_args()
 
     print("Building UR5e cable insertion env...")
     env = CableInsertionUR5eEnv(obs_mode="state", randomize=False)
     env.reset()
-    print(f"  Model: {env.model.nbody} bodies, {env.model.njnt} joints, "
-          f"{env.model.nu} actuators")
+    print(f"  Model: {env.model.nbody} bodies, {env.model.njnt} joints, {env.model.nu} actuators")
 
     # --- Montage ---
-    print(f"\nRendering {MONTAGE_STEPS}-step montage "
-          f"({len(MONTAGE_CAMERAS)} cameras, {STEPS_BETWEEN_CAPTURES} "
-          f"sub-steps between captures)...")
+    print(
+        f"\nRendering {MONTAGE_STEPS}-step montage "
+        f"({len(MONTAGE_CAMERAS)} cameras, {STEPS_BETWEEN_CAPTURES} "
+        f"sub-steps between captures)..."
+    )
     montage = make_montage(env)
     FRAMES_DIR.mkdir(exist_ok=True)
     out_path = FRAMES_DIR / "ur5e_montage.png"

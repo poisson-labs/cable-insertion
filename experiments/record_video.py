@@ -38,12 +38,14 @@ def tile_views(frames, dist):
 
 
 def record(args):
-    env = CableInsertionEnv(render_mode="rgb_array",
-                            render_width=CAM_WIDTH, render_height=CAM_HEIGHT)
+    env = CableInsertionEnv(
+        render_mode="rgb_array", render_width=CAM_WIDTH, render_height=CAM_HEIGHT
+    )
 
     model = None
     if args.model:
         from stable_baselines3 import PPO
+
         model = PPO.load(args.model)
         print(f"Loaded policy: {args.model}")
     else:
@@ -76,8 +78,9 @@ def record(args):
     env.close()
 
     out_path = ROOT / "experiments" / args.output
-    iio.imwrite(str(out_path), np.stack(frames), fps=args.fps,
-                codec="libx264", pixelformat="yuv420p")
+    iio.imwrite(
+        str(out_path), np.stack(frames), fps=args.fps, codec="libx264", pixelformat="yuv420p"
+    )
 
     dur = len(frames) / args.fps
     print(f"\nSaved {dur:.1f}s video ({len(frames)} frames @ {args.fps}fps)")
@@ -87,7 +90,9 @@ def record(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Record tiled multi-camera rollout video")
-    parser.add_argument("--model", type=str, default=None, help="Path to trained model (omit for random policy)")
+    parser.add_argument(
+        "--model", type=str, default=None, help="Path to trained model (omit for random policy)"
+    )
     parser.add_argument("--steps", type=int, default=200, help="Number of env steps to record")
     parser.add_argument("--fps", type=int, default=10, help="Video framerate")
     parser.add_argument("--output", type=str, default="rollout.mp4", help="Output filename")

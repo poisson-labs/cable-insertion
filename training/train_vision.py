@@ -25,11 +25,11 @@ checkpoint_cb = CheckpointCallback(
 )
 
 model = PPO(
-    "MultiInputPolicy",       # auto CNN for images, MLP for state
+    "MultiInputPolicy",  # auto CNN for images, MLP for state
     env,
     verbose=1,
     ent_coef=0.01,
-    learning_rate=3e-4,        # SB3 default, good starting point for CNN
+    learning_rate=3e-4,  # SB3 default, good starting point for CNN
     n_steps=2048,
     batch_size=64,
     n_epochs=10,
