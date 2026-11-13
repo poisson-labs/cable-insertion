@@ -5,7 +5,7 @@ description = "MuJoCo simulation and reinforcement learning baselines for autono
 readme = "README.md"
 license = { text = "MIT" }
 authors = [
-    { name = "Taylor Kolasinski", email = "taylor@poissonlabs.ai" },
+    { name = "Taylor Kolasinski", email = "work@poissonlabs.ai" },
 ]
 requires-python = ">=3.11"
 dependencies = [
